@@ -1,1 +1,1 @@
-# cutnRunBenchmark
+# CUT and Run Benchmark
