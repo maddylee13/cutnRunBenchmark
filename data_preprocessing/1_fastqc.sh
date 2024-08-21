@@ -1,3 +1,5 @@
+##1_fastqc.sh is a script for quality controlling the raw data
+
 #!/bin/bash
 
 #PBS -l select=1:mem=64gb:ncpus=1
