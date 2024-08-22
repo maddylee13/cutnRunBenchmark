@@ -1,0 +1,47 @@
+---
+title: "13_repReprod.Rmd"
+output: output=github_document
+date: "2024-08-22"
+---
+
+```{setting up project directory}
+projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+```
+
+```{Packages}
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+```
+
+```{Sample List}
+sampleList = c("CR_000_C2A","CR_000_C2B", "CR_000_C5A", "CR_000_C5B", "CR_000_E2A", "CR_000_E2B", "CR_000_E5A", "CR_000_E5B", "CR_000_I2A", "CR_000_I2B", "CR_000_I5A", "CR_000_I5B", "CR_000_M2A", "CR_000_M2B", "CR_000_M5A", "CR_000_M5B")
+
+histList = "CR_000"
+```
+
+```{Reprod loop}
+#collecting reproducibility information
+reprod = c()
+fragCount = NULL
+for(hist in sampleList){
+  if(is.null(fragCount)){
+    fragCount = read.table(paste0(projPath, "/alignment/bed/", hist, "_bowtie2.fragmentsCount.bin500.bed"), header = FALSE) 
+    colnames(fragCount) = c("chrom", "bin", hist)
+  }else{
+    fragCountTmp = read.table(paste0(projPath, "/alignment/bed/", hist, "_bowtie2.fragmentsCount.bin500.bed"), header = FALSE)
+    colnames(fragCountTmp) = c("chrom", "bin", hist)
+    fragCount = full_join(fragCount, fragCountTmp, by = c("chrom", "bin"))
+  }
+}
+```
+
+```{Correlation Plot}
+#plotting the correlation
+M = cor(fragCount %>% select(-c("chrom", "bin")) %>% log2(), use = "complete.obs") 
+
+pdf("replicateReproduceFig.pdf")
+corrplot(M, method = "color", outline = T, addgrid.col = "darkgray", order="hclust", addrect = 3, rect.col = "black", rect.lwd = 3,cl.pos = "b", tl.col = "indianred4", tl.cex = 1, cl.cex = 1, addCoef.col = "black", number.digits = 2, number.cex = 1, col = colorRampPalette(c("midnightblue","white","darkred"))(100))
+dev.off()
+```
