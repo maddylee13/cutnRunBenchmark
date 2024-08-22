@@ -1,0 +1,67 @@
+---
+title: "15_scaleFactor.Rmd"
+output: output=github_document
+date: "2024-08-22"
+---
+
+```{setting up project directory}
+projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+```
+
+```{Packages}
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+```
+
+```{Sample List}
+sampleList = c("CR_000_C2A","CR_000_C2B", "CR_000_C5A", "CR_000_C5B", "CR_000_E2A", "CR_000_E2B", "CR_000_E5A", "CR_000_E5B", "CR_000_I2A", "CR_000_I2B", "CR_000_I5A", "CR_000_I5B", "CR_000_M2A", "CR_000_M2B", "CR_000_M5A", "CR_000_M5B")
+
+histList = "CR_000"
+```
+
+```{Scale Factor Calculation}
+multiplier = 10000
+scaleFactor = c()
+
+for(hist in sampleList){
+  spikeDepth = read.table(paste0(projPath, "/alignment/sam/bowtie2_summary/", hist, "_bowtie2_spikeIn.seqDepth"), header = FALSE, fill = TRUE)$V1[1]
+  histInfo = strsplit(hist, "_")[[1]]
+  replicate = substr(histInfo[3], nchar(histInfo[3]), nchar(histInfo[3]))
+  sampleName = paste0(histInfo[1], "_", histInfo[2], "_", substr(histInfo[3], 1, nchar(histInfo[3])-1))
+  newRow = data.frame(scaleFactor = multiplier / spikeDepth, Sample = sampleName, Replicate = replicate, stringsAsFactors = FALSE)
+  scaleFactor = rbind(scaleFactor, newRow)
+}
+
+scaleFactor$Histone = factor(scaleFactor$Sample, levels = histList)
+scaleFactorSummary = left_join(alignDupSummary, scaleFactor, by = c("Sample", "Replicate"))
+
+write.csv(scaleFactorSummary, paste0("/rds/general/user/mml120/home/p2/scaleFactorSummary.csv", sep=""), row.names = FALSE)
+```
+
+```{Scale Factor Figure}
+fig6A = scaleFactor %>% ggplot(aes(x = Sample, y = scaleFactor, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.9, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 20) +
+  ylab("Spike-in Scalling Factor") +
+  xlab("")
+
+normDepth = inner_join(scaleFactor, alignResult, by = c("Sample", "Replicate")) %>% mutate(normDepth = MappedFragNum_T2T * scaleFactor)
+
+fig6B = normDepth %>% ggplot(aes(x = Sample, y = normDepth, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.9, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 20) +
+  ylab("Normalization Fragment Count") +
+  xlab("") + 
+  coord_cartesian(ylim = c(1000000, 130000000))
+scaleFactorFig <- ggarrange(fig6A, fig6B, ncol = 2, common.legend = TRUE, legend="bottom")
+
+ggsave(filename = paste0("scaleFactorFig.pdf"), plot = scaleFactorFig, device = "pdf", width = 65, height = 15, units = "cm", dpi = 300)
+```
