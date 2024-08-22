@@ -1,0 +1,75 @@
+---
+title: "7_duplicationSummary.Rmd"
+output: html_document
+date: "2024-08-22"
+---
+
+```{setting up project directory}
+projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+```
+
+```{Packages}
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+```
+
+```{Duplication Result}
+sampleList = c("CR_000_C2A","CR_000_C2B", "CR_000_C5A", "CR_000_C5B", "CR_000_E2A", "CR_000_E2B", "CR_000_E5A", "CR_000_E5B", "CR_000_I2A", "CR_000_I2B", "CR_000_I5A", "CR_000_I5B", "CR_000_M2A", "CR_000_M2B", "CR_000_M5A", "CR_000_M5B")
+histList = "CR_000"
+#for loop to run through every sample
+dupResult = c()
+for(hist in sampleList){
+  dupRes = read.table(paste0(projPath, "/alignment/removeDuplicate/picard_summary/", hist, "_picard.rmDup.txt"), header = TRUE, fill = TRUE)
+  #definining sample ID
+  histInfo = strsplit(hist, "_")[[1]]
+  replicate = substr(histInfo[3], nchar(histInfo[3]), nchar(histInfo[3]))
+  sampleName = paste0(histInfo[1], "_", histInfo[2], "_", substr(histInfo[3], 1, nchar(histInfo[3])-1))
+  #calculating duplication rate
+  dupResult = data.frame(Sample = sampleName, Replicate = replicate, MappedFragNum_T2T = dupRes$READ_PAIRS_EXAMINED[1] %>% as.character %>% as.numeric, DuplicationRate = dupRes$PERCENT_DUPLICATION[1] %>% as.character %>% as.numeric * 100, EstimatedLibrarySize = dupRes$ESTIMATED_LIBRARY_SIZE[1] %>% as.character %>% as.numeric) %>% mutate(UniqueFragNum = MappedFragNum_T2T * (1-DuplicationRate/100))  %>% rbind(dupResult, .)
+}
+dupResult$Histone = factor(dupResult$Sample, levels = histList)
+```
+
+```{Alignment Summary Table}
+alignDupSummary = left_join(alignSummary, dupResult, by = c("Sample", "Replicate", "MappedFragNum_T2T")) %>% mutate(DuplicationRate = paste0(DuplicationRate, "%"))
+alignDupSummary
+
+alignDupSummary = subset(alignDupSummary, select = -c(Histone.y))
+alignDupSummary <- alignDupSummary %>% rename(Histone = Histone.x)
+
+write.csv(alignDupSummary, paste0("/rds/general/user/mml120/home/p2/alignDupSummary.csv", sep=""), row.names = FALSE)
+```
+
+```{Duplication Rate Figure}
+fig4A = dupResult %>% ggplot(aes(x = Sample, y = DuplicationRate, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.9, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("Duplication Rate (*100%)") +
+  xlab("") 
+
+fig4B = dupResult %>% ggplot(aes(x = Sample, y = EstimatedLibrarySize, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.9, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("Estimated Library Size") +
+  xlab("") 
+
+fig4C = dupResult %>% ggplot(aes(x = Sample, y = UniqueFragNum, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.9, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("# of Unique Fragments") +
+  xlab("")
+
+dupFig <- ggarrange(fig4A, fig4B, fig4C, ncol = 3, common.legend = TRUE, legend="bottom")
+ggsave(filename = paste0("dupFigure.pdf"), plot = dupFig, device = "pdf", width = 100, height = 30, units = "cm", dpi = 300)
+```
