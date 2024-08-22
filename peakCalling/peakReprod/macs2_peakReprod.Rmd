@@ -1,0 +1,129 @@
+---
+title: "macs2_peakReprod.Rmd"
+output: output=github_document
+date: "2024-08-22"
+---
+
+```{setting up project directory}
+projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+```
+
+```{Packages}
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+library(GenomicRanges)
+library(chromVAR)
+```
+
+```{Sample List}
+sampleList = c("CR_000_C2A","CR_000_C2B", "CR_000_C5A", "CR_000_C5B", "CR_000_E2A", "CR_000_E2B", "CR_000_E5A", "CR_000_E5B", "CR_000_I2A", "CR_000_I2B", "CR_000_I5A", "CR_000_I5B", "CR_000_M2A", "CR_000_M2B", "CR_000_M5A", "CR_000_M5B")
+
+histList = "CR_000"
+```
+
+```{Number of Peaks}
+peakN = c()
+peakWidth = c()
+for(hist in sampleList){
+  histInfo = strsplit(hist, "_")[[1]]
+  replicate = substr(histInfo[3], nchar(histInfo[3]), nchar(histInfo[3]))
+  sampleName = paste0(histInfo[1], "_", histInfo[2], "_", substr(histInfo[3], 1, nchar(histInfo[3])-1))
+  if(!(histInfo[3] %in% c("I2A", "I2B", "I5A", "I5B"))){
+      peakInfo = read.table(paste0(projPath, "/peakCalling/macs2/unnorm_Ig/", hist, "_peaks.narrowPeak"), header = FALSE, fill = TRUE)  %>% mutate(width = abs(V3-V2))
+      peakN = data.frame(peakN = nrow(peakInfo), Sample = sampleName, Replicate = replicate) %>% rbind(peakN, .)
+      peakWidth = data.frame(width = peakInfo$width, Sample = sampleName, Replicate = replicate)  %>% rbind(peakWidth, .)
+  }
+}
+peakN %>% dplyr::select(Sample, Replicate, peakN)
+```
+
+```{Calculating Peak Reprod Rate}
+histL = c("CR_000_C2", "CR_000_C5", "CR_000_E2", "CR_000_E5", "CR_000_M2", "CR_000_M5")
+repL = paste0(c("A","B"))
+#calculating the number of overlapping peaks between the replicates of each sample
+peakOverlap = c()
+for(hist in histL){
+  overlap.gr = GRanges()
+  for(rep in repL){
+    peakInfo = read.table(paste0(projPath, "/peakCalling/macs2/unnorm_Ig/", hist, rep, "_peaks.narrowPeak"), header = FALSE, fill = TRUE)
+    peakInfo.gr = GRanges(peakInfo$V1, IRanges(start = peakInfo$V2, end = peakInfo$V3), strand = "*")
+    if(length(overlap.gr) >0){
+      overlap.gr = overlap.gr[findOverlaps(overlap.gr, peakInfo.gr)@from]
+    }else{
+      overlap.gr = peakInfo.gr
+    }
+  }
+  peakOverlap = data.frame(peakReprod = length(overlap.gr), Sample = hist) %>% rbind(peakOverlap, .)
+}
+#calculating peak reproducibility rate
+peakReprod = left_join(peakN, peakOverlap, by = "Sample") %>% mutate(peakReprodRate = peakReprod/peakN * 100)
+peakReprod %>% dplyr::select(Sample, Replicate, peakN, peakReprodNum = peakReprod, peakReprodRate)  
+peakReprod <- peakReprod[!duplicated(peakReprod), ]
+
+write.csv(peakReprod, paste0("/rds/general/user/mml120/ephemeral/p2/CR_000/csvTable/peakReprod_macs2.csv", sep=""), row.names = FALSE)
+
+```{FRiPs Score}
+inPeakData = c()
+for(hist in histL){
+  histInfo = strsplit(hist, "_")[[1]]
+  sampleName = paste0(histInfo[1], "_", histInfo[2], "_", substr(histInfo[3], 1, nchar(histInfo[3])-1))    
+  for(rep in repL){
+    peakRes = read.table(paste0(projPath, "/peakCalling/macs2/unnorm_Ig/", sampleName, rep, "_peaks.narrowPeak"), header = FALSE, fill = TRUE)
+    peak.gr = GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
+    bamFile = paste0(bamDir, "/", sampleName, rep, "_bowtie2.mapped.bam")
+    fragment_counts <- getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
+    inPeakN = counts(fragment_counts)[,1] %>% sum
+    inPeakData = rbind(inPeakData, data.frame(inPeakN = inPeakN, Sample = sampleName, Replicate = rep))
+  }
+}
+#calculating FRiP percentage
+frip = left_join(inPeakData, alignResult, by = c("Sample", "Replicate")) %>% mutate(frip = inPeakN/MappedFragNum_T2T * 100)
+frip %>% select(Sample, Replicate, SequencingDepth, MappedFragNum_T2T, AlignmentRate_T2T, FragInPeakNum = inPeakN, FRiPs = frip)
+
+write.csv(frip, paste0("/rds/general/user/mml120/ephemeral/p2/CR_000/csvTable/frip1_macs2.csv", sep=""), row.names = FALSE)
+```
+
+```{Reproducibility Figure}
+fig8A = peakN %>% ggplot(aes(x = Sample, y = peakN, fill = Sample)) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("Number of Peaks") +
+  xlab("")
+
+fig8B = peakWidth %>% ggplot(aes(x = Sample, y = width, fill = Sample)) +
+  geom_violin() +
+  facet_grid(Replicate~.) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  scale_y_continuous(trans = "log", breaks = c(400, 3000, 22000)) +
+  theme_bw(base_size = 18) +
+  ylab("Width of Peaks") +
+  xlab("")
+
+fig8C = peakReprod %>% ggplot(aes(x = Sample, y = peakReprodRate, fill = Sample, label = round(peakReprodRate, 2))) +
+  geom_bar(stat = "identity") +
+  geom_text(vjust = 0.1) +
+  facet_grid(Replicate~.) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("% of Peaks Reproduced") +
+  xlab("")
+
+fig8D = frip %>% ggplot(aes(x = Sample, y = frip, fill = Sample, label = round(frip, 2))) +
+  geom_boxplot() +
+  geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
+  theme_bw(base_size = 18) +
+  ylab("% of Fragments in Peaks") +
+  xlab("")
+
+macs2_peakCallingFig <- ggarrange(fig8A, fig8B, fig8C, fig8D, ncol = 2, nrow=2, common.legend = TRUE, legend="bottom")
+ggsave(filename = paste0("peakCallingFig_macs2.pdf"), plot = macs2_peakCallingFig, device = "pdf", width = 65, height = 50, units = "cm", dpi = 300)
+```
