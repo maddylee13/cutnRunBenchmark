@@ -1,0 +1,168 @@
+---
+title: "upsetPlot.Rmd"
+output: output=github_document
+date: "2024-08-23"
+---
+
+```{Packages}
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+library(GenomicRanges)
+library(chromVAR)
+library(ChIPseeker)
+library(GenomicFeatures)
+library(DiffBind)
+library(ChIPpeakAnno)
+library(ComplexUpset)
+library(tidyr)
+```
+
+```{loading in peaks}
+mergedPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/macs2")
+mergedFile <- list.files(path = mergedPath, pattern = "combined_peaks\\.narrowPeak$", full.names = TRUE)
+print(mergedFile)
+
+mergedPeaks <- list()
+for(peaks in mergedFile){
+  peak <- readPeakFile(peaks, as = "GRanges")
+  mergedPeaks[[peaks]] <- peak
+}
+
+print(mergedPeaks)
+
+uniqueMerged <- reduce(mergedPeaks[[1]])
+
+#loading in chIPseq files
+chipseqPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks/luca_chipseq")
+mcf7chipseqFile <- list.files(path = chipseqPath, pattern = "T2T_hglft_ERa_MCF7_Darbre_peaks\\.bed$", full.names = TRUE)
+print(mcf7chipseqFile)
+
+mcf7ChipseqPeak <- GRanges()
+for(peaks in mcf7chipseqFile) {
+  peak <- readPeakFile(peaks, as = "GRanges")
+  mcf7ChipseqPeak <- c(mcf7ChipseqPeak, peak)
+}
+
+print(mcf7ChipseqPeak)
+
+uniqueMcf7 <- reduce(mcf7ChipseqPeak)
+
+ltedChipseqFile <- list.files(path = chipseqPath, pattern = "T2T_hglft_ERa_LTED_Darbre_peaks\\.bed$", full.names = TRUE)
+print(ltedChipseqFile)
+
+ltedChipseqPeak <- GRanges()
+for(peaks in ltedChipseqFile) {
+  peak <- readPeakFile(peaks, as = "GRanges")
+  ltedChipseqPeak <- c(ltedChipseqPeak, peak)
+}
+
+print(ltedChipseqPeak)
+
+carollPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks")
+carollFiles <- list.files(path = carollPath, pattern = "\\T2T.bed$", full.names = TRUE)
+
+carollPeaks <- GRanges()
+for(peaks in carollFiles) {
+  peak <- readPeakFile(peaks, as = "GRanges")
+  carollPeaks <- c(carollPeaks, peak)
+}
+
+print(carollPeaks)
+
+peakList <- list("CR_000_E"=uniqueMerged, "MCF7_ChIPseq"=uniqueMcf7, "LTED_ChIPseq"=ltedChipseqPeak, "Standard_ER_Peaks"=carollPeaks)
+```
+
+```{defining messager function}
+messager <- function(..., v = TRUE, parallel = FALSE) {
+  if(parallel){
+    if(v) try({message_parallel(...)})
+  } else {
+    msg <- paste(...)
+    if (v) try({message(msg)})
+  }
+}
+
+report_time <- function(t1, 
+                        func=NULL,
+                        verbose=TRUE){
+  messager(if(!is.null(func))paste0(func,"():"),
+           "Done in",
+           paste0(round(difftime(Sys.time(),t1,units = "s"),1),"s."),
+           v=verbose)
+}
+```
+
+```{defining overlap_upset_plot function}
+overlap_upset_plot <- function(peaklist,
+                               verbose=TRUE){
+  
+  value <- NULL;
+  
+  t1 <- Sys.time()
+  
+  font_size <- 1
+  messager("--- Running overlap_upset_plot() ---",v=verbose)
+  ### Set Metadata Colnames ###
+  # So it doesn't interfere
+  for(i in seq_len(length(peaklist))){
+    my_label <- make.unique(rep("name",
+                                ncol(GenomicRanges::elementMetadata(peaklist[[i]])))
+    )
+    colnames(GenomicRanges::elementMetadata(peaklist[[i]])) <- my_label
+  }
+  ### Erase Names ###
+  peaklist_names <- names(peaklist)
+  names(peaklist) <- NULL
+  ### Create Merged Dataset ###
+  merged_peakfile <- do.call(c, peaklist)
+  ### Calculate Overlap & Create Data Frame ###
+  overlap_df <- NULL
+  for(i in seq_len(length(peaklist))){
+    overlap <- IRanges::findOverlaps(merged_peakfile, peaklist[[i]])
+    sample_name <- rep(peaklist_names[i], length(IRanges::to(overlap)))
+    df <- data.frame(peak=IRanges::from(overlap), sample=sample_name)
+    unique_df <- unique(df)
+    overlap_df <- rbind(overlap_df, unique_df)
+  }
+  ### Adjust Font Size ###  
+  if(length(peaklist)>6){
+    font_size <- 0.65
+  }
+  #### Create Upset Plot ###
+  overlap_df$value <- 1
+  overlap_df <- tidyr::spread(data = overlap_df, 
+                              key = sample, 
+                              value = value, 
+                              fill=0) 
+  
+  base_annotations <- list(
+    'Intersection size'=ComplexUpset::intersection_size(),
+    'Intersection ratio'=ComplexUpset::intersection_ratio(
+      text_mapping=ggplot2::aes(label=!!ComplexUpset::upset_text_percentage())
+    )
+  )
+  plt <- ComplexUpset::upset(data = overlap_df,
+                             intersect = peaklist_names,
+                             base_annotations = base_annotations)
+  upset_plot <- UpSetR::upset(data = overlap_df, 
+                               order.by = "freq",
+                               mb.ratio = c(0.60, 0.40),
+                               sets = peaklist_names,
+                               number.angles = 30,
+                               text.scale = c(1, 1, 1, font_size,
+                                              font_size+0.15, font_size))
+  report_time(t1 = t1,
+              func="overlap_upset_plot",
+              verbose = verbose)
+  return(list(plot=plt,
+              data=overlap_df))
+}
+```
+
+```{plotting upset plot}
+pdf("test_upset.pdf")
+overlap_upset_plot(peakList, verbose = TRUE)
+dev.off()
+```
