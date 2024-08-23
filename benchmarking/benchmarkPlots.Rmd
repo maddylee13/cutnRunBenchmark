@@ -1,0 +1,137 @@
+---
+title: "benchmarkPlots.Rmd"
+output: output=github_document
+date: "2024-08-23"
+---
+
+```{setting up project directory}
+projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+```
+
+```{Packages}
+library(ChIPseeker)
+library(GenomicFeatures)
+library(GenomicRanges)
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(DiffBind)
+```
+
+```{T2T txdb file}
+#get txdb file from T2T
+txdb_t2t <- makeTxDbFromGFF("/rds/general/project/traditiom/live/epimem/genome_indexes/chm13v2.0/chm13v2.0_RefSeq_Liftoff_v4.gff3", dataSource = "CHM13v2.0 github website, RefSeq + Litoff", organism = "Homo sapiens", circ_seqs = "chrM")
+```
+
+```{Loading in Peak Files}
+#defining path
+macs2Path = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/macs2/unnorm_Ig")
+
+#listing all MACS2 .narrowPeak files
+macs2Files <- list.files(path = macs2Path, pattern = "\\.narrowPeak$", full.names = TRUE)
+print(macs2Files)
+#creating GRanges list object
+macs2Peaks <- list()
+for(peaks in macs2Files){
+  peak <- readPeakFile(peaks, as = "GRanges")
+  macs2Peaks[[peaks]] <- peak
+}
+
+print(macs2Peaks)
+
+sampleList <- names(macs2Peaks)
+
+#listing only the CR_000_E peaks
+EFiles <- list.files(path = macs2Path, pattern = "(E2A|E2B|E5A|E5B)_peaks\\.narrowPeak$", full.names = TRUE)
+print(EFiles)
+
+CR_000_ER_Peaks <- list()
+for(peaks in EFiles){
+  peak <- readPeakFile(peaks, as = "GRanges")
+  CR_000_ER_Peaks[[peaks]] <- peak
+}
+
+print(CR_000_ER_Peaks)
+
+#loading in merged CR_000_E peaks
+mergedPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/macs2")
+mergedFile <- list.files(path = mergedPath, pattern = "combined_peaks\\.narrowPeak$", full.names = TRUE)
+print(mergedFile)
+
+mergedPeaks <- list()
+for(peaks in mergedFile){
+  peak <- readPeakFile(peaks, as = "GRanges")
+  mergedPeaks[[peaks]] <- peak
+}
+
+print(mergedPeaks)
+
+#taking unique peaks only
+uniqueMerged <- reduce(mergedPeaks[[1]])
+
+#loading in ChIPseq peaks
+chipseqPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks/luca_chipseq")
+mcf7chipseqFile <- list.files(path = chipseqPath, pattern = "T2T_hglft_ERa_MCF7_Darbre_peaks\\.bed$", full.names = TRUE)
+print(mcf7chipseqFile)
+
+mcf7ChipseqPeak <- GRanges()
+for(peaks in mcf7chipseqFile) {
+  peak <- readPeakFile(peaks, as = "GRanges")
+  mcf7ChipseqPeak <- c(mcf7ChipseqPeak, peak)
+}
+
+print(mcf7ChipseqPeak)
+
+uniqueMcf7 <- reduce(mcf7ChipseqPeak)
+
+#loading in carolls files
+carollPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks")
+carollFiles <- list.files(path = carollPath, pattern = "\\T2T.bed$", full.names = TRUE)
+
+carollPeaks <- GRanges()
+for(peaks in carollFiles) {
+  peak <- readPeakFile(peaks, as = "GRanges")
+  carollPeaks <- c(carollPeaks, peak)
+}
+
+print(carollPeaks)
+
+#combining files for comparison
+comparisonPeaks <- c(CR_000_ER_Peaks, carollPeaks, chipseqPeaks)
+print(comparisonPeaks)
+```
+
+```{annotating peaks}
+peakAnnoList <- lapply(allPeaks, annotatePeak, TxDb=txdb_t2t, tssRegion=c(-1000, 1000), verbose=FALSE)
+comparisonAnnoList <- lapply(comparisonPeaks, annotatePeak, TxDb=txdb_t2t, tssRegion=c(-1000, 1000), verbose=FALSE)
+```
+
+```{feature distribution plot}
+annoBarplot <- plotAnnoBar(peakAnnoList)
+ggsave(filename = paste0("annobarplot.pdf"), plot = annoBarplot, device = "pdf", width = 20, height = 10)
+```
+
+```{creating DBA object}
+sampleList <- names(comparisonPeaks)
+print(sampleList)
+
+DBA_mixed = NULL
+for(i in 1:length(comparisonPeaks)){
+  DBA_mixed = DiffBind::dba.peakset(DBA = DBA_mixed, peaks = comparisonPeaks[[i]], sampID = sampleList[[i]], peak.format = "bed")
+}
+```
+
+```{correlation plot}
+pdf("peakCorrplot.pdf")
+plot(DBA_mixed)
+dev.off()
+```
+
+```{venn diagram}
+#defining sample names
+Samples <-c("CR_000_E", "MCF7_chIPseq", "LTED_chIPseq", "Standard_ER_Peaks")
+
+pdf("venn.pdf")
+makeVennDiagram(Peaks=list(uniqueMerged, uniqueMcf7, ltedChipseqPeak , carollPeaks), NameOfPeaks=Samples, totalTest = 25000)
+dev.off()
+```
