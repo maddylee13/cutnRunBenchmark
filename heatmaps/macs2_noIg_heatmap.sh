@@ -22,7 +22,7 @@ sampleID=$(echo `basename $sample _raw.bw`)
 
 cores=8
 computeMatrix reference-point -S $DIR/alignment/bigwig/"$sampleID"_raw.bw \
-              -R $DIR/peakCalling/macs2/unnorm_noIg/"$sampleID"_summits.bed \
+              -R $DIR/peakCalling/macs2/unnorm_noIg/"$sampleID"_peaks.narrowPeak \
               --skipZeros -o $OUTDIR/"$sampleID"_macs2.mat.gz -p $cores -a 3000 -b 3000 --referencePoint center
 
 plotHeatmap -m $OUTDIR/"$sampleID"_macs2.mat.gz -out $OUTDIR/"$sampleID"_macs2_heatmap.png --sortUsing sum --startLabel "Peak Start" -\
