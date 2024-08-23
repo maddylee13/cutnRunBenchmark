@@ -28,15 +28,15 @@ The following R packages were used:
 * viridis (v.0.6.5)
 
 The following Anaconda evironments and command line tools were used:
-| Env   |bowtie2            |cutnTag            |deeptools          | macs2         | seacr             |ucsc-tools        |
-|-------|-------------------|-------------------|-------------------|---------------|-------------------|------------------|
-|tools  |bowtie2 (v.2.5.3)  |bedtools (v.2.31.1)|bedtools (v.2.31.1)|macs2 (v.1.9.4)|bedtools (v.2.31.1)|ucsc-tools (v.357)|
-|       |samtools (v.1.2)   |fastp (v.0.23.4)   |bowtie2 (v.2.5.3)  |               |seacr (v.1.3)      |                  |
-|       |                   |fastqc (v.0.12.1)  |deeptools (v.3.5.5)|               |                   |                  |
-|       |                   |multiqc (v.1.2.1)  |samtools (v.1.2)   |               |                   |                  |
-|       |                   |picard (v.2.18.7)  |fastqc (v.0.12.1)  |               |                   |                  |
-|       |                   |samtools (v.1.2)   |                   |               |                   |                  |
-|       |                   |bioconda
+|bowtie2            |cutnTag            |deeptools          | macs2         | seacr             |ucsc-tools        |
+|-------------------|-------------------|-------------------|---------------|-------------------|------------------|
+|bowtie2 (v.2.5.3)  |bedtools (v.2.31.1)|bedtools (v.2.31.1)|macs2 (v.1.9.4)|bedtools (v.2.31.1)|ucsc-tools (v.357)|
+|samtools (v.1.2)   |fastp (v.0.23.4)   |bowtie2 (v.2.5.3)  |               |seacr (v.1.3)      |                  |
+|                   |fastqc (v.0.12.1)  |deeptools (v.3.5.5)|               |                   |                  |
+|                   |multiqc (v.1.2.1)  |samtools (v.1.2)   |               |                   |                  |
+|                   |picard (v.2.18.7)  |fastqc (v.0.12.1)  |               |                   |                  |
+|                   |samtools (v.1.2)   |                   |               |                   |                  |
+|                   |bioconda
 
 
 **References**
