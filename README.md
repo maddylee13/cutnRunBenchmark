@@ -18,7 +18,7 @@ The following R packages were used:
 * ChIPseeker (v.1.38.0)
 * chromVAR (v.1.24.0)
 * ComplexUpset (v.1.3.3)
-* corrplot (0.92)
+* corrplot (v.0.92)
 * DiffBind (v.3.12.0)
 * dplyr (v.1.1.3)
 * GenomicFeatures (v.1.54.1)
