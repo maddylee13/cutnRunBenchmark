@@ -21,7 +21,7 @@ sample=${arr[$tid]}
 sampleID=$(echo `basename $sample _bowtie2.fragments.normalized.bedgraph`)
 
 seacr="/rds/general/user/mml120/home/anaconda3/pkgs/seacr-1.3-hdfd78af_2/bin/SEACR_1.3.sh"
-histControl=$DIR/alignment/bedgraph/histControl/CR_000_I2B_bowtie2.fragments.normalized.bedgraph
+histControl=$DIR/alignment/bedgraph/histControl/CR_000_I2A_bowtie2.fragments.normalized.bedgraph
 mkdir -p $DIR/peakCalling/SEACR
 
 bash $seacr $DIR/alignment/bedgraph/"$sampleID"_bowtie2.fragments.normalized.bedgraph \
