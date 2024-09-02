@@ -14,10 +14,8 @@ The CUT&Run data was benchmarked against publicly available ChIPseq datasets. Th
 
 The following R packages were used:
 * BiocManager (v.1.30.23)
-* ChIPpeakAnno (v.3.36.0)
 * ChIPseeker (v.1.38.0)
 * chromVAR (v.1.24.0)
-* ComplexUpset (v.1.3.3)
 * corrplot (v.0.92)
 * DiffBind (v.3.12.0)
 * dplyr (v.1.1.3)
@@ -25,6 +23,7 @@ The following R packages were used:
 * GenomicRanges (v.1.54.1)
 * ggplot2 (v.3.4.4)
 * ggpubr (v.0.6.0)
+* ggvenn (v.0.1.10)
 * tidyr (v.1.3.0)
 * viridis (v.0.6.5)
 
