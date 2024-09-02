@@ -58,6 +58,7 @@ for(type in peakType){
       peakInfo.gr = GRanges(peakInfo$V1, IRanges(start = peakInfo$V2, end = peakInfo$V3), strand = "*")
       if(length(overlap.gr) >0){
         overlap.gr = overlap.gr[findOverlaps(overlap.gr, peakInfo.gr)@from]
+        overlap.gr = unique(overlap.gr)
       }else{
         overlap.gr = peakInfo.gr
         
@@ -99,7 +100,7 @@ fig7A = peakN %>% ggplot(aes(x = Sample, y = peakN, fill = Sample)) +
   geom_boxplot() +
   geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
   facet_grid(~peakType) +
-  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "mako", alpha = 0.8) +
   scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
   theme_bw(base_size = 18) +
   ylab("Number of Peaks") +
@@ -108,7 +109,7 @@ fig7A = peakN %>% ggplot(aes(x = Sample, y = peakN, fill = Sample)) +
 fig7B = peakWidth %>% ggplot(aes(x = Sample, y = width, fill = Sample)) +
   geom_violin() +
   facet_grid(Replicate~peakType) +
-  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "mako", alpha = 0.8) +
   scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
   scale_y_continuous(trans = "log", breaks = c(400, 3000, 22000)) +
   theme_bw(base_size = 18) +
@@ -119,7 +120,7 @@ fig7C = peakReprod %>% ggplot(aes(x = Sample, y = peakReprodRate, fill = Sample,
   geom_bar(stat = "identity") +
   geom_text(vjust = 0.1) +
   facet_grid(Replicate~peakType) +
-  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "mako", alpha = 0.8) +
   scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
   theme_bw(base_size = 18) +
   ylab("% of Peaks Reproduced") +
@@ -128,7 +129,7 @@ fig7C = peakReprod %>% ggplot(aes(x = Sample, y = peakReprodRate, fill = Sample,
 fig7D = frip %>% ggplot(aes(x = Sample, y = frip, fill = Sample, label = round(frip, 2))) +
   geom_boxplot() +
   geom_jitter(aes(color = Replicate), position = position_jitter(0.15)) +
-  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "magma", alpha = 0.8) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.55, option = "mako", alpha = 0.8) +
   scale_color_viridis(discrete = TRUE, begin = 0.1, end = 0.9) +
   theme_bw(base_size = 18) +
   ylab("% of Fragments in Peaks") +
