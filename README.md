@@ -8,7 +8,7 @@ The processing and analysis of the CUT&Run data follows the tutorial provided by
 
 **Benchmarking**
 
-The CUT&Run data was benchmarked against publicly available ChIPseq datasets. The code for functions used to generate the UpSet plot was generated from publicly available code from (https://github.com/neurogenomics/EpiCompare). Specifically, the "messager" and "overlap_upset_plot" functions were implemented from the EpiCompare package. 
+The CUT&Run data was benchmarked against publicly available ChIPseq datasets. 
 
 **R Packages and Command Line Tools**
 
