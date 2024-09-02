@@ -99,6 +99,8 @@ print(carollPeaks)
 
 #combining files for comparison
 comparisonPeaks <- c(CR_000_ER_Peaks, carollPeaks, chipseqPeaks)
+names <-c("CR_000_E", "MCF7_chIPseq", "LTED_chIPseq", "Standard_ER_Peaks")
+names(comparisonPeaks) <- names
 print(comparisonPeaks)
 ```
 
@@ -129,10 +131,9 @@ dev.off()
 ```
 
 ```{venn diagram}
-#defining sample names
-Samples <-c("CR_000_E", "MCF7_chIPseq", "LTED_chIPseq", "Standard_ER_Peaks")
 
-pdf("venn.pdf")
-makeVennDiagram(Peaks=list(uniqueMerged, uniqueMcf7, ltedChipseqPeak , carollPeaks), NameOfPeaks=Samples, totalTest = 25000)
+genes = lapply(comparisonAnnoList, function(i) as.data.frame(i)$geneId)
+pdf("test_venn2.pdf")
+vennplot(genes)
 dev.off()
 ```
