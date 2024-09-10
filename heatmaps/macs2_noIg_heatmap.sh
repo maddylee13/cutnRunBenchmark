@@ -11,8 +11,8 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate deeptools
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000
-OUTDIR=/rds/general/user/mml120/ephemeral/p2/CR_000/heatmap/macs2/unnorm_noIgG
+DIR=/path/to/home/directory
+OUTDIR=/path/to/home/directory/heatmap/macs2/unnorm_noIgG
 
 files=$(ls $DIR/CR_000_*_raw.bw)
 arr=($files)
