@@ -21,12 +21,12 @@ library(ggvenn)
 
 ```{T2T txdb file}
 #get txdb file from T2T
-txdb_t2t <- makeTxDbFromGFF("/rds/general/project/traditiom/live/epimem/genome_indexes/chm13v2.0/chm13v2.0_RefSeq_Liftoff_v4.gff3", dataSource = "CHM13v2.0 github website, RefSeq + Litoff", organism = "Homo sapiens", circ_seqs = "chrM")
+txdb_t2t <- makeTxDbFromGFF("/path/to/genome/directory/genome_indexes/chm13v2.0/chm13v2.0_RefSeq_Liftoff_v4.gff3", dataSource = "CHM13v2.0 github website, RefSeq + Litoff", organism = "Homo sapiens", circ_seqs = "chrM")
 ```
 
 ```{Loading in Peak Files}
 #defining path
-macs2Path = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/macs2/unnorm_Ig")
+macs2Path = ("/path/to/home/directory/peakCalling/macs2/unnorm_Ig")
 
 #listing all MACS2 .narrowPeak files
 macs2Files <- list.files(path = macs2Path, pattern = "\\.narrowPeak$", full.names = TRUE)
@@ -55,7 +55,7 @@ for(peaks in EFiles){
 print(CR_000_ER_Peaks)
 
 #loading in merged CR_000_E peaks
-mergedPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/macs2")
+mergedPath = ("/path/to/home/directory/peakCalling/macs2")
 mergedFile <- list.files(path = mergedPath, pattern = "combined_peaks\\.narrowPeak$", full.names = TRUE)
 print(mergedFile)
 
@@ -71,7 +71,7 @@ print(mergedPeaks)
 uniqueMerged <- reduce(mergedPeaks[[1]])
 
 #loading in ChIPseq peaks
-chipseqPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks/luca_chipseq")
+chipseqPath = ("/path/to/home/directory/peakCalling/standardPeaks/luca_chipseq")
 mcf7chipseqFile <- list.files(path = chipseqPath, pattern = "T2T_hglft_ERa_MCF7_Darbre_peaks\\.bed$", full.names = TRUE)
 print(mcf7chipseqFile)
 
@@ -86,7 +86,7 @@ print(mcf7ChipseqPeak)
 uniqueMcf7 <- reduce(mcf7ChipseqPeak)
 
 #loading in carolls files
-carollPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000/peakCalling/standardPeaks")
+carollPath = ("/path/to/home/directory/peakCalling/standardPeaks")
 carollFiles <- list.files(path = carollPath, pattern = "\\T2T.bed$", full.names = TRUE)
 
 carollPeaks <- GRanges()
