@@ -11,8 +11,8 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate deeptools
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000/
-OUTDIR=/rds/general/user/mml120/ephemeral/p2/CR_000/alignment/bigwig
+DIR=/path/to/home/directory
+OUTDIR=/path/to/home/directory/alignment/bigwig
 
 files=$(ls $DIR/alignment/bam/*_bowtie2.mapped.bam)
 arr=($files)
