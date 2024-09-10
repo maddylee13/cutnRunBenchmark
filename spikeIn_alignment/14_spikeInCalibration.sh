@@ -12,8 +12,8 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate cutnTag
  
-projPath=/rds/general/user/mml120/home/p2
-GENOMESIZE=/rds/general/project/traditiom/live/epimem/genome_indexes/chm13v2.0/chm13v2.0.chrom.sizes
+projPath=/path/to/home/directory
+GENOMESIZE=/path/to/genome/directory/chm13v2.0/chm13v2.0.chrom.sizes
 
 files=$(ls $projPath/alignment/bed/*_bowtie2.fragments.bed)
 arr=($files)
