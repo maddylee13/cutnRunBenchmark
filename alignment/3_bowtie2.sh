@@ -7,9 +7,9 @@
 #PBS -N  fastqc_CR_000_alignment
 #PBS -J 0-15
 
-DIR=/rds/general/user/mml120/home/p2/fastp
-GENOMEDIR=/rds/general/project/traditiom/live/epimem/genome_indexes/chm13v2.0
-TEMPDIR=/rds/general/user/mml120/home/p2
+DIR=/path/to/home/directory/fastp
+GENOMEDIR=/path/to/genome/directory/genome_indexes/chm13v2.0
+TEMPDIR=/path/to/home/directory
 
 tid=$PBS_ARRAY_INDEX
 
