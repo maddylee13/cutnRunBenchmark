@@ -8,9 +8,9 @@
 #PBS -J 0-31
 tid=$PBS_ARRAY_INDEX
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000
+DIR=/path/to/home/directory
 
-OUTDIR=/rds/general/user/mml120/ephemeral/p2/CR_000/fastp
+OUTDIR=/path/to/home/directory/fastp
 
 module load anaconda3/personal
 source activate cutnTag
