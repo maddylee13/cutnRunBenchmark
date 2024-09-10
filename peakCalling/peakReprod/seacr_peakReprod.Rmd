@@ -5,7 +5,7 @@ date: "2024-08-23"
 ---
 
 ```{setting up project directory}
-projPath = ("/rds/general/user/mml120/ephemeral/p2/CR_000")
+projPath = ("/path/to/home/directory")
 ```
 
 ```{Packages}
