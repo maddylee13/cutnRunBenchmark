@@ -13,11 +13,11 @@ module load anaconda3/personal
 source activate cutnTag
 
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000/alignment
+DIR=/path/to/home/directory/alignment
 
-PICARD=/rds/general/user/mml120/home/anaconda3/pkgs/picard-2.18.7-2/share/picard-2.18.7-2/picard.jar
+PICARD=/path/to/home/directory/anaconda3/pkgs/picard-2.18.7-2/share/picard-2.18.7-2/picard.jar
 
-ephem=/rds/general/user/mml120/ephemeral
+ephem=/path/to/ephemeral
 
 files=$(ls $DIR/sam/bowtie2_summary/*_bowtie2.sam)
 arr=($files)
