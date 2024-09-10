@@ -14,7 +14,7 @@ tid=$PBS_ARRAY_INDEX
 
 cd $DIR/peakCalling/macs2
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000
+DIR=/path/to/home/directory
 
 for file in $DIR/alignment/bam/noIgG/*_bowtie2.mapped.bam
 do
