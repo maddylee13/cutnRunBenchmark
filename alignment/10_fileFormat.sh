@@ -11,7 +11,7 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate cutnTag
 
-DIR=/rds/general/user/mml120/ephemeral/p2/CR_000/alignment
+DIR=/path/to/home/directory/alignment
 
 files=$(ls $DIR/sam/bowtie2_summary/*_bowtie2.sam)
 arr=($files)
