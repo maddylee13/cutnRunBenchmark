@@ -12,7 +12,7 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate cutnTag
 
-projPath=/rds/general/user/mml120/ephemeral/p2/CR_000
+projPath=/path/to/home/directory
 
 files=$(ls $projPath/alignment/bed/*_bowtie2.fragments.bed)
 arr=($files)
