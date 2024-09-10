@@ -12,11 +12,11 @@ tid=$PBS_ARRAY_INDEX
 module load anaconda3/personal
 source activate bowtie2
 
-DIR=/rds/general/user/mml120/home/p2/fastp
+DIR=/path/to/home/directory/fastp
 
-GENOMEDIR=/rds/general/project/traditiom/live/epimem/cutntag/spikein/ecoli/Escherichia_coli_K_12_MG1655/NCBI/2001-10-15/Sequence/Bowtie2Index
+GENOMEDIR=/path/to/genome/directory/ecoli/Escherichia_coli_K_12_MG1655/NCBI/2001-10-15/Sequence/Bowtie2Index
 
-TEMPDIR=/rds/general/user/mml120/home/p2 
+TEMPDIR=/path/to/home/directory 
 
 files=$(ls $DIR/*_1.trimmed.fastq.gz)
 arr=($files)
